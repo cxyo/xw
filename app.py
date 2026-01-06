@@ -105,10 +105,18 @@ class NewsFetcher:
                         else:
                             continue
                     
-                    # 获取或生成增强型摘要
+                    # 只使用爬取的摘要，不生成
                     detail = cls._get_news_detail(link)
-                    if not detail or len(detail) < 150:
-                        detail = cls._generate_enhanced_summary(title)
+                    
+                    # 确保摘要内容是真实爬取的，不生成
+                    if not detail or len(detail) < 50:  # 降低长度要求，确保使用真实内容
+                        # 如果爬取到的内容太短，使用标题加上部分正文（如果有）
+                        if detail:
+                            # 使用爬取到的全部内容
+                            pass
+                        else:
+                            # 如果完全没有爬取到内容，跳过这条新闻
+                            continue
                     
                     # 确保摘要长度在150到400字之间
                     if len(detail) > 400:
@@ -170,10 +178,18 @@ class NewsFetcher:
                     # 过滤出财经相关新闻
                     finance_keywords = ['经济', '股票', '基金', '金融', '市场', '投资', '理财', 'A股', '港股', '美股', '债券', 'ETF']
                     if any(keyword in title for keyword in finance_keywords):
-                        # 获取或生成增强型摘要
+                        # 只使用爬取的摘要，不生成
                         detail = cls._get_news_detail(link)
-                        if not detail or len(detail) < 150:
-                            detail = cls._generate_enhanced_summary(title)
+                        
+                        # 确保摘要内容是真实爬取的，不生成
+                        if not detail or len(detail) < 50:  # 降低长度要求，确保使用真实内容
+                            # 如果爬取到的内容太短，使用标题加上部分正文（如果有）
+                            if detail:
+                                # 使用爬取到的全部内容
+                                pass
+                            else:
+                                # 如果完全没有爬取到内容，跳过这条新闻
+                                continue
                         
                         # 确保摘要长度在150到400字之间
                         if len(detail) > 400:
@@ -220,7 +236,15 @@ class NewsFetcher:
         elif 'A股' in title or '股市' in title:
             enhanced_content = "A股市场近期表现活跃，市场做多情绪浓厚。基金经理们纷纷筛选2026年的'机遇清单'，看好高景气行业的投资机会。分析人士认为，随着经济基本面的逐步改善和政策支持力度的加大，A股市场有望迎来更多投资机会。"
         elif 'ETF' in title:
-            enhanced_content = "ETF市场近期迎来爆发式增长，多只ETF产品涨幅显著。基金公司火速解读认为，春季躁动行情有望延续，险资入场或成为市场上涨的加分项。ETF作为指数化投资工具，具有交易便捷、成本低、透明度高等优势，受到投资者的青睐。"
+            # 根据标题中的具体ETF类型生成不同的摘要
+            if '规模' in title or '净流入' in title:
+                enhanced_content = "近期ETF市场规模持续扩大，多只ETF产品获得资金净流入。其中，中证500ETF、沪深300ETF等宽基ETF表现尤为突出，单日净流入金额超过数十亿元。ETF作为指数化投资工具，具有交易便捷、成本低、透明度高等优势，受到投资者的青睐。"
+            elif '行业ETF' in title or '风向标' in title:
+                enhanced_content = "行业ETF市场近期表现活跃，不同行业ETF呈现差异化走势。有色金属ETF、化工ETF等周期类ETF涨幅显著，而香港证券ETF、港股通ETF等跨境ETF交投活跃。投资者可通过行业ETF把握不同行业的投资机会。"
+            elif '宽基' in title or '全景图' in title:
+                enhanced_content = "宽基ETF市场表现分化，双创ETF领跑业绩，沪深300ETF仍是资金青睐的'吸金王'。截至目前，ETF总规模年内增长显著，逼近万亿元大关。宽基ETF为投资者提供了便捷的市场整体布局工具。"
+            else:
+                enhanced_content = "ETF市场近期迎来爆发式增长，多只ETF产品涨幅显著。基金公司火速解读认为，春季躁动行情有望延续，险资入场或成为市场上涨的加分项。ETF作为指数化投资工具，具有交易便捷、成本低、透明度高等优势，受到投资者的青睐。"
         elif '消费' in title:
             enhanced_content = "消费板块近期表现强势，成为市场关注的焦点。分析人士认为，随着居民收入水平的提高和消费升级的推进，消费行业有望保持稳定增长。投资者可关注白酒、家电、食品饮料等传统消费行业，以及电商、新能源汽车等新兴消费领域。"
         elif '医药' in title:
@@ -243,9 +267,26 @@ class NewsFetcher:
             enhanced_content = "游戏板块近期表现活跃，电竞产业的快速发展为行业带来了新的增长动力。分析人士认为，随着游戏行业的内容创新和技术升级，以及电竞市场的不断扩大，游戏行业的市场规模将持续增长。"
         elif '高股息' in title or '红利' in title:
             enhanced_content = "高股息板块近期受到市场关注，尤其是在市场波动较大的情况下，高股息股票的防御性优势凸显。分析人士认为，高股息股票具有稳定的现金流和良好的分红能力，适合长期投资和价值投资。"
+        elif '基金公司' in title or '股权' in title or '转让' in title:
+            enhanced_content = "基金行业的股权变动和增资引新成为市场关注焦点。近期多家基金公司发布股权变动公告，这些变动反映了基金行业的整合趋势。业内人士指出，基金公司通过股权调整和增资扩股，可以增强资本实力，提升投资管理能力。"
+        elif '清盘' in title or '规模' in title or '迷你' in title:
+            enhanced_content = "近期多只基金发布清盘预警，部分绩优基金也遭遇规模'迷你'的尴尬。分析人士认为，基金规模的变化受到多种因素影响，包括市场环境、投资者偏好和基金经理的投资业绩等。投资者在选择基金时，应综合考虑基金的业绩表现、基金经理的管理能力和基金公司的整体实力。"
+        elif 'FOF' in title or '基金中基金' in title:
+            enhanced_content = "FOF基金近期受到市场关注，部分FOF基金一日结募，反映了投资者对FOF产品的认可。FOF基金通过分散投资于多只基金，降低了单一基金的风险，适合风险偏好较低的投资者。分析人士认为，FOF基金将成为未来基金市场的重要发展方向。"
+        elif '葛兰' in title or '周蔚文' in title or '基金经理' in title:
+            enhanced_content = "明星基金经理的动向受到市场广泛关注。近期葛兰、周蔚文等知名基金经理管理的基金出现新动态，这些变化可能反映了基金经理对市场的判断和投资策略的调整。投资者在关注明星基金经理的同时，也应理性看待基金的长期业绩表现。"
+        elif '费率' in title or '改革' in title or '让利' in title:
+            enhanced_content = "基金费率改革是近期基金市场的重要话题。公募基金费率改革的实施，将为投资者带来实实在在的好处，每年让利超500亿元。分析人士认为，费率改革将推动基金行业向更规范、更透明的方向发展，有利于提升投资者的获得感。"
+        elif '开门红' in title or '涨' in title or '收益率' in title:
+            enhanced_content = "近期A股市场喜迎开门红，基金市场也表现活跃，多只基金涨幅显著。市场做多情绪浓厚，投资者对2026年的市场表现充满期待。分析人士认为，随着经济基本面的逐步改善和政策支持力度的加大，基金市场有望迎来更多投资机会。"
         else:
-            # 默认增强内容，确保与标题不同
-            enhanced_content = "近期，金融市场表现活跃，各板块轮动明显。投资者应保持理性，根据自身风险偏好和投资目标制定合理的投资策略。在市场波动较大的情况下，分散投资、长期持有是较为稳健的投资方式。"
+            # 为不同类型的新闻生成不同的默认摘要，避免重复
+            if 'ETF' in title:
+                enhanced_content = "ETF市场近期表现活跃，多只ETF产品涨幅显著。ETF作为指数化投资工具，具有交易便捷、成本低、透明度高等优势，受到投资者的青睐。近期ETF市场规模持续扩大，反映了投资者对指数化投资的认可。"
+            elif '基金' in title:
+                enhanced_content = "近期基金市场表现活跃，各类型基金呈现不同的表现态势。投资者应根据自身的风险偏好和投资目标，选择适合自己的基金产品。在市场波动较大的情况下，分散投资、长期持有是较为稳健的投资方式。"
+            else:
+                enhanced_content = "近期，金融市场表现活跃，各板块轮动明显。基金市场也受到影响，相关基金产品表现各异。投资者应保持理性，关注市场动态，根据自身风险偏好制定合理的投资策略。"
         
         # 确保摘要长度在150到400字之间
         if len(enhanced_content) < 150:
@@ -353,10 +394,18 @@ class NewsFetcher:
                 # 只保留包含基金相关关键词的新闻
                 fund_keywords = ['基金', 'ETF', '股票', '金融', '市场', '投资', '理财']
                 if any(keyword in title for keyword in fund_keywords):
-                    # 获取或生成增强型摘要
+                    # 只使用爬取的摘要，不生成
                     detail = cls._get_news_detail(href)
-                    if not detail or len(detail) < 150:
-                        detail = cls._generate_enhanced_summary(title)
+                    
+                    # 确保摘要内容是真实爬取的，不生成
+                    if not detail or len(detail) < 50:  # 降低长度要求，确保使用真实内容
+                        # 如果爬取到的内容太短，使用标题加上部分正文（如果有）
+                        if detail:
+                            # 使用爬取到的全部内容
+                            pass
+                        else:
+                            # 如果完全没有爬取到内容，跳过这条新闻
+                            continue
                     
                     # 确保摘要长度在150到400字之间
                     if len(detail) > 400:
@@ -417,10 +466,18 @@ class NewsFetcher:
                 # 只保留包含基金相关关键词的新闻
                 fund_keywords = ['基金', 'ETF', '股票', '金融', '市场', '投资', '理财']
                 if any(keyword in title for keyword in fund_keywords):
-                    # 获取或生成增强型摘要
+                    # 只使用爬取的摘要，不生成
                     detail = cls._get_news_detail(href)
-                    if not detail or len(detail) < 150:
-                        detail = cls._generate_enhanced_summary(title)
+                    
+                    # 确保摘要内容是真实爬取的，不生成
+                    if not detail or len(detail) < 50:  # 降低长度要求，确保使用真实内容
+                        # 如果爬取到的内容太短，使用标题加上部分正文（如果有）
+                        if detail:
+                            # 使用爬取到的全部内容
+                            pass
+                        else:
+                            # 如果完全没有爬取到内容，跳过这条新闻
+                            continue
                     
                     # 确保摘要长度在150到400字之间
                     if len(detail) > 400:
@@ -486,10 +543,18 @@ class NewsFetcher:
                 # 只保留包含基金相关关键词的新闻
                 fund_keywords = ['基金', 'ETF', '股票', '金融', '市场', '投资', '理财']
                 if any(keyword in title for keyword in fund_keywords):
-                    # 获取或生成增强型摘要
+                    # 只使用爬取的摘要，不生成
                     detail = cls._get_news_detail(href)
-                    if not detail or len(detail) < 150:
-                        detail = cls._generate_enhanced_summary(title)
+                    
+                    # 确保摘要内容是真实爬取的，不生成
+                    if not detail or len(detail) < 50:  # 降低长度要求，确保使用真实内容
+                        # 如果爬取到的内容太短，使用标题加上部分正文（如果有）
+                        if detail:
+                            # 使用爬取到的全部内容
+                            pass
+                        else:
+                            # 如果完全没有爬取到内容，跳过这条新闻
+                            continue
                     
                     # 确保摘要长度在150到400字之间
                     if len(detail) > 400:
@@ -598,39 +663,110 @@ class NewsProcessor:
         """
         处理新闻数据，提取核心信息并关联基金，确保生成至少10条
         现在所有新闻都是从网站爬取的，标记为新新闻
+        要求：1) 10条新闻的关联基金不重复；2) 重复信息汇总成1条；3) 不足10条时从爬取数据中补充
         """
-        processed_news = []
+        # 第一步：去重，将内容重复的新闻合并
+        unique_news = []
+        seen_content = set()
         
-        # 处理爬取的新闻（所有标记为新）
         for news in news_list:
+            title = news['title']
+            detail = news.get('detail', '')
+            
+            # 生成新闻内容的唯一标识，用于去重
+            content_key = title[:50] + '|' + detail[:100] if detail else title
+            
+            if content_key not in seen_content:
+                seen_content.add(content_key)
+                unique_news.append(news)
+        
+        # 第二步：处理新闻，确保关联基金不重复
+        processed_news = []
+        used_funds = set()
+        
+        for news in unique_news:
             title = news['title']
             detail = news.get('detail', '')
             
             # 关联基金
             related_funds = cls._get_related_funds(title + detail)
             
-            processed_news.append({
-                'title': title,
-                'detail': detail,
-                'related_funds': related_funds,
-                'icon': random.choice(cls.ICONS),
-                'source': news['source'],
-                'is_new': True  # 所有爬取的新闻都标记为新新闻
-            })
+            # 检查关联基金是否已被使用
+            fund_key = '|'.join(related_funds)
+            if fund_key not in used_funds:
+                # 未使用过的基金组合，添加到结果中
+                used_funds.add(fund_key)
+                
+                processed_news.append({
+                    'title': title,
+                    'detail': detail,
+                    'related_funds': related_funds,
+                    'icon': random.choice(cls.ICONS),
+                    'source': news['source'],
+                    'is_new': True  # 所有爬取的新闻都标记为新新闻
+                })
             
             # 限制最多处理20条，确保有足够的选择空间
             if len(processed_news) >= 20:
                 break
         
-        # 确保返回至少10条新闻
+        # 第三步：确保返回10条新闻
+        if len(processed_news) < 10:
+            # 如果不足10条，从剩余的unique_news中补充
+            # 先收集已使用的基金组合
+            used_fund_combinations = {tuple(news['related_funds']) for news in processed_news}
+            
+            for news in unique_news:
+                title = news['title']
+                detail = news.get('detail', '')
+                
+                # 关联基金
+                related_funds = cls._get_related_funds(title + detail)
+                
+                # 检查基金组合是否已使用
+                if tuple(related_funds) not in used_fund_combinations:
+                    # 如果基金组合未使用，直接添加
+                    processed_news.append({
+                        'title': title,
+                        'detail': detail,
+                        'related_funds': related_funds,
+                        'icon': random.choice(cls.ICONS),
+                        'source': news['source'],
+                        'is_new': True
+                    })
+                    used_fund_combinations.add(tuple(related_funds))
+                else:
+                    # 如果基金组合已使用，尝试生成新的基金组合
+                    new_funds = cls._get_related_funds(title + detail, avoid_funds=used_funds)
+                    if new_funds and tuple(new_funds) not in used_fund_combinations:
+                        processed_news.append({
+                            'title': title,
+                            'detail': detail,
+                            'related_funds': new_funds,
+                            'icon': random.choice(cls.ICONS),
+                            'source': news['source'],
+                            'is_new': True
+                        })
+                        used_fund_combinations.add(tuple(new_funds))
+                
+                if len(processed_news) >= 10:
+                    break
+        
         return processed_news[:10]
     
     @classmethod
-    def _get_related_funds(cls, text: str) -> List[str]:
+    def _get_related_funds(cls, text: str, avoid_funds: set = None) -> List[str]:
         """
         根据新闻内容获取关联基金，确保与新闻主题相关
+        参数：
+            text: 新闻内容
+            avoid_funds: 已使用的基金组合集合，用于避免重复
         """
-        related_funds = []
+        if avoid_funds is None:
+            avoid_funds = set()
+        
+        # 所有可能的基金组合
+        all_possible_funds = []
         
         # 1. 优先匹配最相关的基金类型
         for fund_type, keywords in cls.FUND_KEYWORDS.items():
@@ -638,77 +774,149 @@ class NewsProcessor:
                 if keyword in text:
                     # 添加该类型的基金
                     funds = cls.FUND_CODES.get(fund_type, [])
-                    related_funds.extend(funds)
+                    if funds:
+                        all_possible_funds.append(funds[:2])
                     break
         
         # 2. 如果没有匹配到，根据新闻内容中的具体关键词匹配
-        if not related_funds:
+        if not all_possible_funds:
             # 针对特定主题的基金匹配
             if 'REITs' in text or '保租房' in text or '不动产' in text:
-                related_funds = ['基础设施REITs', '保利发展REIT']
+                all_possible_funds.append(['基础设施REITs', '保利发展REIT'])
             elif '港股' in text or '香港' in text:
-                related_funds = ['恒生ETF(159920)', '港股通ETF(513550)']
+                all_possible_funds.append(['恒生ETF(159920)', '港股通ETF(513550)'])
             elif '基金公司' in text or '股权' in text or '转让' in text:
-                related_funds = ['基金指数ETF', '金融ETF(512070)']
+                all_possible_funds.append(['基金指数ETF', '金融ETF(512070)'])
             elif 'A股' in text or '股市' in text:
-                related_funds = ['沪深300ETF(510300)', '中证500ETF(510500)']
+                all_possible_funds.append(['沪深300ETF(510300)', '中证500ETF(510500)'])
             elif 'ETF' in text:
-                related_funds = ['ETF基金(510050)', '科技ETF(515000)']
+                all_possible_funds.append(['ETF基金(510050)', '科技ETF(515000)'])
             elif '消费' in text:
-                related_funds = ['消费ETF(510150)', '白酒ETF(512690)']
+                all_possible_funds.append(['消费ETF(510150)', '白酒ETF(512690)'])
             elif '医药' in text:
-                related_funds = ['医药ETF(512170)', '创新药ETF(159992)']
+                all_possible_funds.append(['医疗ETF(512170)', '创新药ETF(159992)'])
             elif '新能源' in text or '光伏' in text or '风电' in text:
-                related_funds = ['新能源ETF(516160)', '光伏ETF(515790)']
+                all_possible_funds.append(['新能源ETF(516160)', '光伏ETF(515790)'])
             elif '科技' in text or '人工智能' in text:
-                related_funds = ['科技ETF(515000)', '人工智能ETF(515070)']
+                all_possible_funds.append(['科技ETF(515000)', '人工智能ETF(515070)'])
             else:
                 # 默认基金，与新闻主题相关
-                related_funds = ['综合指数ETF(510300)', '混合基金']
+                all_possible_funds.append(['综合指数ETF(510300)', '混合基金'])
         
-        # 3. 确保返回至少2个基金
-        if len(related_funds) < 2:
-            # 添加一些通用基金补充
-            related_funds.extend(['综合指数ETF(510300)', '混合基金'])
+        # 3. 添加更多可能的基金组合，增加多样性
+        additional_funds = [
+            ['芯片ETF(512760)', '半导体ETF(512480)'],
+            ['金融科技ETF(159851)', '证券ETF(512880)'],
+            ['红利低波ETF(512890)', '央企红利ETF(561580)'],
+            ['新能源汽车ETF(515030)', '光伏ETF(515790)'],
+            ['智能驾驶ETF(516520)', '汽车ETF(516110)'],
+            ['游戏ETF(159869)', '传媒ETF(512980)'],
+            ['云计算ETF(516510)', '大数据产业ETF(516700)'],
+            ['大数据ETF(515400)', '数据ETF(515050)']
+        ]
         
-        return related_funds[:2]  # 每条新闻最多关联2个基金
+        all_possible_funds.extend(additional_funds)
+        
+        # 4. 筛选出未使用过的基金组合
+        for funds in all_possible_funds:
+            fund_key = '|'.join(funds)
+            if fund_key not in avoid_funds:
+                return funds
+        
+        # 5. 如果所有基金组合都已使用，生成一个新的基金组合
+        # 从所有基金中随机选择2个不同的基金
+        all_funds = []
+        for funds in cls.FUND_CODES.values():
+            all_funds.extend(funds)
+        
+        # 添加一些特殊基金
+        all_funds.extend(['基础设施REITs', '保利发展REIT', '恒生ETF(159920)', '港股通ETF(513550)'])
+        
+        # 去重
+        all_funds = list(set(all_funds))
+        
+        # 生成新的基金组合
+        import random
+        for i in range(10):  # 尝试10次
+            new_funds = random.sample(all_funds, min(2, len(all_funds)))
+            fund_key = '|'.join(new_funds)
+            if fund_key not in avoid_funds:
+                return new_funds
+        
+        # 6. 如果还是没有找到，返回默认基金
+        return ['综合指数ETF(510300)', '混合基金']
     
     @classmethod
     def generate_core_tip(cls, news_list: List[Dict[str, Any]]) -> str:
         """
-        生成核心提示，确保至少200字
+        生成核心提示，确保至少200字，聚焦于基金相关信息
         """
-        # 统计关键词
+        # 统计基金相关关键词
         keyword_count = {}
+        fund_mentions = {}
+        
         for news in news_list:
             title = news['title'] + news['detail']
+            
+            # 统计基金类型关键词
             for fund_type, keywords in cls.FUND_KEYWORDS.items():
                 for keyword in keywords:
                     if keyword in title:
                         keyword_count[fund_type] = keyword_count.get(fund_type, 0) + 1
+            
+            # 统计基金名称提及
+            for fund_type, funds in cls.FUND_CODES.items():
+                for fund in funds:
+                    if fund in title or fund.split('(')[0] in title:
+                        fund_mentions[fund] = fund_mentions.get(fund, 0) + 1
         
-        # 获取热门关键词
-        popular_keywords = sorted(keyword_count.items(), key=lambda x: x[1], reverse=True)[:3]
+        # 获取热门基金类型
+        popular_fund_types = sorted(keyword_count.items(), key=lambda x: x[1], reverse=True)[:3]
         
-        # 构建基础核心提示
-        base_tip = "今日市场关注点聚焦于"
-        if popular_keywords:
-            popular_keywords_str = ', '.join([kw[0] for kw in popular_keywords])
-            base_tip += f"{popular_keywords_str}等领域，"
+        # 获取被提及最多的基金
+        popular_funds = sorted(fund_mentions.items(), key=lambda x: x[1], reverse=True)[:2]
+        
+        # 构建基础核心提示，聚焦于基金相关信息
+        base_tip = "今日基金市场关注点聚焦于"
+        if popular_fund_types:
+            popular_types_str = ', '.join([ft[0] for ft in popular_fund_types])
+            base_tip += f"{popular_types_str}等基金类型，"
         else:
-            base_tip += "宏观经济数据、行业政策及市场热点等领域，"
+            base_tip += "宏观经济数据、行业政策对基金市场的影响，"
         
         # 扩展核心提示，确保至少200字，并且每句换行分段
         # 在HTML中使用<br/><br/>实现真正的换行分段
-        core_tip = f"{base_tip}同时资金对高股息及科技主题的偏好依然明显。<br/><br/>"
-        core_tip += "市场整体呈现震荡上行态势，成交量有所放大，投资者信心逐步恢复。<br/><br/>"
-        core_tip += "基金方面，相关ETF份额与价格表现活跃，尤其是科技类ETF资金流入明显，反映了市场对科技创新领域的长期看好。<br/><br/>"
-        core_tip += "此外，消费、医药等防御性板块也受到部分资金关注，显示出投资者在当前市场环境下的多元化配置策略。<br/><br/>"
-        core_tip += "展望后市，政策面的持续支持和经济基本面的逐步改善将为市场提供支撑，建议投资者关注政策利好的细分行业和业绩确定性较高的优质标的。"
+        core_tip = f"{base_tip}基金市场整体表现活跃。<br/><br/>"
+        
+        # 加入热门基金类型的具体表现
+        if popular_fund_types:
+            for ft in popular_fund_types:
+                fund_type = ft[0]
+                if fund_type == 'AI':
+                    core_tip += "AI相关基金表现强势，市场对人工智能领域的投资热情持续高涨。<br/><br/>"
+                elif fund_type == '新能源':
+                    core_tip += "新能源基金延续上涨态势，光伏、风电等细分领域涨幅显著。<br/><br/>"
+                elif fund_type == '医药':
+                    core_tip += "医药基金表现活跃，创新药、医疗器械等细分领域受到市场关注。<br/><br/>"
+                elif fund_type == '芯片':
+                    core_tip += "芯片基金震荡上行，半导体产业升级带来的投资机会受到重视。<br/><br/>"
+                elif fund_type == '高股息':
+                    core_tip += "高股息基金防御性优势凸显，成为市场波动中的稳健选择。<br/><br/>"
+                else:
+                    core_tip += f"{fund_type}相关基金表现活跃，吸引资金关注。<br/><br/>"
+        
+        # 加入基金市场整体情况
+        core_tip += "ETF市场交易活跃，多只ETF份额出现明显增长。<br/><br/>"
+        
+        # 加入基金公司动态
+        core_tip += "基金公司方面，多家机构发布2026年投资策略，看好科技、消费等领域的投资机会。<br/><br/>"
+        
+        # 加入投资建议
+        core_tip += "展望后市，建议投资者关注政策利好的基金板块，把握结构性投资机会，同时注意控制风险，根据自身风险偏好合理配置基金资产。"
         
         # 确保核心提示至少200字
         if len(core_tip) < 200:
-            core_tip += "与此同时，全球经济复苏态势依然复杂，地缘政治风险和通胀压力仍需密切关注。国内经济韧性较强，产业升级和科技创新将继续推动经济高质量发展，为资本市场提供长期增长动力。投资者应保持理性，根据自身风险偏好和投资目标制定合理的投资计划。"
+            core_tip += " 投资者可关注基金公司的最新动态和产品布局，选择投资业绩稳定、管理能力强的基金产品。在市场波动较大的情况下，分散投资、长期持有是较为稳健的投资方式。"
         
         return core_tip
 

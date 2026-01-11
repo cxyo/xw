@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  finance-news:
+    build: .
+    container_name: finance-news-generator
+    restart: unless-stopped
+    volumes:
+      - ./output:/app/output
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python app.py

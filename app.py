@@ -26,7 +26,7 @@ import json
 import logging
 import random
 from typing import Dict, List, Tuple, Optional, Any
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 from bs4 import BeautifulSoup
@@ -56,6 +56,27 @@ class NewsFetcher:
     REQUEST_INTERVAL = 1.0
 
     _last_request_time = 0.0
+    
+    @classmethod
+    def get_previous_trading_day(cls) -> datetime:
+        """
+        获取上一个交易日
+        交易日：周一至周五，不包括法定节假日
+        简单实现：只考虑周一至周五，不考虑法定节假日
+        """
+        today = datetime.now()
+        
+        # 如果今天是周一，上一个交易日是上周五
+        if today.weekday() == 0:  # 周一
+            previous = today - timedelta(days=3)
+        # 如果今天是周六或周日，上一个交易日是上周五
+        elif today.weekday() == 5 or today.weekday() == 6:  # 周六或周日
+            previous = today - timedelta(days=today.weekday() - 4)
+        # 其他情况，上一个交易日是昨天
+        else:
+            previous = today - timedelta(days=1)
+        
+        return previous
 
     @classmethod
     def _ensure_request_interval(cls) -> None:
@@ -130,12 +151,15 @@ class NewsFetcher:
                         # 如果没有找到合适的结束符，直接截取400字
                         detail = detail[:400]
                     
+                    # 尝试获取新闻的实际发布时间
+                    publish_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    
                     news_list.append({
                         'title': title,
                         'link': link,
                         'source': '东方财富网',
                         'detail': detail,  # 完整显示摘要，不加...
-                        'publish_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        'publish_time': publish_time
                     })
                     
                     if len(news_list) >= count:
@@ -203,12 +227,15 @@ class NewsFetcher:
                             # 如果没有找到合适的结束符，直接截取400字
                             detail = detail[:400]
                         
+                        # 尝试获取新闻的实际发布时间
+                        publish_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        
                         news_list.append({
                             'title': title,
                             'link': link,
                             'source': '新浪财经',
                             'detail': detail,  # 完整显示摘要，不加...
-                            'publish_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                            'publish_time': publish_time
                         })
                         
                         if len(news_list) >= count:
@@ -419,12 +446,15 @@ class NewsFetcher:
                         # 如果没有找到合适的结束符，直接截取400字
                         detail = detail[:400]
                     
+                    # 尝试获取新闻的实际发布时间
+                    publish_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    
                     news_list.append({
                         'title': title,
                         'link': href,
                         'source': '每日经济新闻',
                         'detail': detail,  # 完整显示摘要，不加...
-                        'publish_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        'publish_time': publish_time
                     })
                     
                     if len(news_list) >= count:
@@ -491,12 +521,15 @@ class NewsFetcher:
                         # 如果没有找到合适的结束符，直接截取400字
                         detail = detail[:400]
                     
+                    # 尝试获取新闻的实际发布时间
+                    publish_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    
                     news_list.append({
                         'title': title,
                         'link': href,
                         'source': '同花顺财经',
                         'detail': detail,  # 完整显示摘要，不加...
-                        'publish_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        'publish_time': publish_time
                     })
                     
                     if len(news_list) >= count:
@@ -568,12 +601,15 @@ class NewsFetcher:
                         # 如果没有找到合适的结束符，直接截取400字
                         detail = detail[:400]
                     
+                    # 尝试获取新闻的实际发布时间
+                    publish_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    
                     news_list.append({
                         'title': title,
                         'link': href,
                         'source': '基金速查网',
                         'detail': detail,  # 完整显示摘要，不加...
-                        'publish_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        'publish_time': publish_time
                     })
                     
                     if len(news_list) >= count:
@@ -613,8 +649,14 @@ class NewsFetcher:
         
         logger.info(f"去重后剩余 {len(unique_news)} 条新闻")
         
-        # 打乱顺序
-        random.shuffle(unique_news)
+        # 根据发布时间排序，最新的新闻排在前面
+        def get_publish_time(news):
+            try:
+                return datetime.strptime(news['publish_time'], '%Y-%m-%d %H:%M:%S')
+            except:
+                return datetime.now()
+        
+        unique_news.sort(key=get_publish_time, reverse=True)
         
         # 确保返回足够数量的新闻，不使用默认数据
         return unique_news[:count]
@@ -933,8 +975,9 @@ class NewsGenerator:
         """
         生成适合微信公众号的纯HTML格式，无CSS类和样式标签
         """
-        # 生成当前日期
-        today = datetime.now().strftime('%Y-%m-%d')
+        # 使用上一个交易日的日期
+        previous_trading_day = NewsFetcher.get_previous_trading_day()
+        today = previous_trading_day.strftime('%Y-%m-%d')
         
         # 构建纯HTML内容，不使用任何CSS类，只使用内联样式
         html_content = f"""
@@ -1000,9 +1043,8 @@ class NewsGenerator:
         """
         保存HTML文件
         """
-        os.makedirs(output_dir, exist_ok=True)
-        
-        output_path = os.path.join(output_dir, "index.html")  # 改为index.html
+        # 直接保存到根目录，不创建子文件夹
+        output_path = os.path.join(".", "index.html")  # 直接保存到根目录
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
         

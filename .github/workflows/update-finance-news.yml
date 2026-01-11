@@ -5,6 +5,9 @@ on:
     - cron: '0 12 * * *'  # UTC时间12:00，对应上海时间20:00
   workflow_dispatch:  # 允许手动触发
 
+permissions:
+  contents: write  # 授予写入仓库内容的权限
+
 jobs:
   update-finance-news:
     runs-on: ubuntu-latest
